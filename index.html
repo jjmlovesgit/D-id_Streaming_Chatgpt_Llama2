@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>D-ID Streaming POC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="./node_modules/@gradio/client/dist/index.js"></script>
+    <style>
+      #user-input-field {
+          width: 80%; 
+          padding: 8px; 
+          box-sizing: border-box; 
+          margin: 0 auto; 
+          display: block; 
+      }
+      body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Mulish', sans-serif;
+      }
+      .peerConnectionState-new {
+        color: cornflowerblue;
+      }
+      .peerConnectionState-connecting {
+        color: orange;
+      }
+      .peerConnectionState-connected {
+        color: green;
+      }
+      .peerConnectionState-disconnected,
+      .peerConnectionState-closed,
+      .peerConnectionState-failed {
+        color: red;
+      }
+
+      .iceConnectionState-new {
+        color: cornflowerblue;
+      }
+      .iceConnectionState-checking {
+        color: orange;
+      }
+      .iceConnectionState-connected,
+      .iceConnectionState-completed {
+        color: green;
+      }
+      .peerConnectionState-disconnected,
+      .peerConnectionState-closed,
+      .peerConnectionState-failed {
+        color: red;
+      }
+
+      .iceGatheringState-new {
+        color: cornflowerblue;
+      }
+      .iceGatheringState-gathering {
+        color: orange;
+      }
+      .iceGatheringState-complete {
+        color: black;
+      }
+
+      .signalingState-stable {
+        color: green;
+      }
+      .signalingState-have-local-offer,
+      .signalingState-have-remote-offer,
+      .signalingState-have-local-pranswer,
+      .signalingState-have-remote-pranswer {
+        color: cornflowerblue;
+      }
+      .signalingState-closed {
+        color: red;
+      }
+
+      .streamingState-streaming {
+        color: green;
+      }
+
+      .streamingState-empty {
+        color: grey;
+      }
+
+      .video-container {
+        width: 360px; 
+        height: 360px; 
+        border-radius: 50%; 
+        overflow: hidden; 
+        display: flex; 
+        justify-content: center;
+        align-items: center;
+      }
+
+      #talk-video {
+        width: 360px; 
+        height: 360px; 
+        border-radius: 50%; 
+        background-color: #000; 
+          }
+
+      body * {
+        font-family: 'Mulish', sans-serif;
+        text-align: center;
+      }
+
+      #content {
+        width: 820px;
+        position: relative;
+        margin: 0 auto;
+      }
+
+      #buttons {
+        clear: both;
+        padding: 0 0 0 0;
+        text-align: center;
+      }
+
+      button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        font-size: 16px;
+        margin: 0 5px;
+        background-color: #7459fe;
+        color: #fff;
+      }
+
+      button:hover {
+        background-color: #9480ff;
+        cursor: pointer;
+        transition: all 0.2s ease-out;
+      }
+
+      #status {
+        clear: both;
+        padding: 20px 0 0 0;
+        text-align: left;
+        display: inline-block;
+        zoom: 1;
+        line-height: 140%;
+        font-size: 15px;
+      }
+
+      #status div {
+        padding-bottom: 10px;
+      }
+
+      #video-wrapper {
+        background: url(bg.png);
+        height: 475px;
+        background-position: top;
+      }
+
+      #video-wrapper div {
+        width: 360px;
+        margin: 0 auto;
+        padding: 90px 0 0 0;
+      }
+      video {
+        display: block;
+        border-radius: 60%; 
+        background-color: #000;
+        transform: scale(.80); 
+        transition: transform 0.3s ease; 
+      }
+
+      #input-container label {
+      margin-left: 5px;
+      cursor: pointer;
+      color: #ffffff;
+      }
+
+      #input-container input[type="checkbox"] {
+      cursor: pointer;
+}
+
+    </style>
+  </head>
+
+  <body>
+     <div id="content">
+      <div id="video-wrapper">
+        <div class="video-container">
+          <video id="talk-video" width="360" height="360" autoplay></video>
+        </div>
+      </div>
+      <br />
+
+      <div id="input-container" style="text-align: left;">
+        <input type="text" id="user-input-field" placeholder="I am a helpful assistant eager to help you... may I answer a question?" style="font-size: 20px;">
+        <div style="height: 1em;"></div> 
+        <hr> 
+        <div style="height: 1em;"></div> 
+        <div style="display: flex; justify-content: center;">
+          <input type="checkbox" id="toggleDID">
+          <label for="toggleDID">Send to DID</label>
+      </div>     
+        <div style="height: 1em;"></div> 
+    </div>
+       
+      <div id="buttons">
+        <button id="connect-button" type="button">Connect</button>
+        <button id="voice-typing-button" type="button">Voice Typing</button>
+        <button id="talk-button" type="button">Let's  Chat</button>
+        <button id="destroy-button" type="button">End a Session</button>
+
+      </div>
+
+      <div id="status">
+        ICE gathering status: <label id="ice-gathering-status-label"></label
+        ><br />
+        ICE status: <label id="ice-status-label"></label><br />
+        Peer connection status: <label id="peer-status-label"></label><br />
+        Signaling status: <label id="signaling-status-label"></label><br />
+        Streaming status: <label id="streaming-status-label"></label><br />
+      </div>
+    </div>
+    <script>
+      function clearInputOnFocus() {
+        var userInputField = document.getElementById("user-input-field");
+        userInputField.addEventListener("focus", function() {
+          userInputField.value = "";
+        });
+      }
+    
+      document.addEventListener("DOMContentLoaded", function() {
+        clearInputOnFocus();
+        
+        document.getElementById("talk-button").addEventListener("click", function() {
+
+        });
+      });
+    </script>
+    
+    <script>
+      if ('webkitSpeechRecognition' in window) {
+        var recognition = new webkitSpeechRecognition();
+        recognition.continuous = false; // Set this to true if you want the recognition to continue even after it detects a pause in speaking
+        recognition.interimResults = true; // Show interim results
+        recognition.lang = 'en-US'; // Set the language of the recognition
+  
+        // What to do when speech is detected
+        recognition.onresult = function(event) {
+          var final_transcript = '';
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              final_transcript += event.results[i][0].transcript;
+            }
+          }
+          // Update the text field with the result
+          document.getElementById('user-input-field').value = final_transcript;
+        };
+  
+        // Start the speech recognition when the button is clicked
+        document.getElementById('voice-typing-button').addEventListener('click', function() {
+          recognition.start();
+        });
+      } else {
+        alert("Web Speech API is not supported in this browser.");
+      }
+    </script>
+
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>

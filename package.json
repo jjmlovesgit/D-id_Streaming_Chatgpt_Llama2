@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0",
+    "openai": "^4.12.4"
+  },
+  "scripts": {
+    "dev": "node app.js"
+  },
+  "name": "streams_oct",
+  "description": "## Initial Setup: * (install express) open a terminal in the folder:     run this: npm install express * (add your d-id api key) edit the `api.json` inside the uncompressed folder and replace the emoji with your key * Run a test to ensure yor api is set correctly by checking d-id credit balance:  Run test_d_id.js * (add your OpenAI api key) edit the `config.json` inside the uncompressed folder and replace the emoji with your key * Run a test to ensure yor api is set correctly by checking ChatGPT:  Run test_openai.js *  Got issues?  Cut and paste to ChartGPT and ask for assistance as both tests must woprk before proceeding",
+  "version": "1.0.0",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@gradio/client": "^0.7.1"
+  }
+}
